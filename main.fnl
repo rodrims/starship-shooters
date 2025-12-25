@@ -1,0 +1,3 @@
+(fn love.load
+  []
+  nil)
