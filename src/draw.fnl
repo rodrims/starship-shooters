@@ -3,11 +3,25 @@
 (var loaded? false)
 (var spritesheet nil)
 (var sprites nil)
+(var cycle 1)
 
 (local size 16)
-(local load-data {:player {:start [32 48]
-                           :grid [3 3]
-                           :default [2 1]}})
+(local cycle-max 8)
+(local load-data
+       {:player {:start [32 48]
+                 :grid [3 3]
+                 :default [2 1]}})
+
+(fn inc-cycle
+  []
+  (if (< (+ cycle 1) cycle-max)
+      (set cycle (+ cycle 1))
+      (set cycle 1)))
+
+(fn phase
+  [cycle-size]
+  (let [mult (/ cycle cycle-max)]
+    (+ 1 (math.floor (* cycle-size mult)))))
 
 (fn load-sprites
   []
@@ -33,7 +47,7 @@
     (set loaded? true)))
 
 (fn draw-sprite
-  [name x y row col]
+  [name x y col row]
   (let [default (. load-data name :default)
         row (or row (. default 1))
         col (or col (. default 2))]
@@ -42,5 +56,26 @@
                         x
                         y)))
 
-{: load-sprites
- : draw-sprite}
+(fn draw-player
+  [x y dx]
+  ; draw ship
+  (draw-sprite :player
+               x
+               y
+               1
+               (if (< dx 0) 1
+                   (= dx 0) 2
+                   (> dx 0) 3))
+  ; draw flame behind ship
+  (draw-sprite :player
+               x
+               (+ y size)
+               (+ 1 (phase 2))
+               (if (< dx 0) 1
+                   (= dx 0) 2
+                   (> dx 0) 3)))
+
+{: inc-cycle
+ : load-sprites
+ : draw-sprite
+ : draw-player}
