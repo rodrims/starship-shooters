@@ -4,7 +4,7 @@
 
 (var cum-dt 0)
 
-(local scale 1)
+(local scale 2)
 
 (fn love.load
   []
@@ -37,8 +37,9 @@
 (fn love.draw
   []
   (love.graphics.scale scale scale)
+  (draw.draw-bg)
+  (each [_ shot (ipairs controls.shots.coords)]
+    (draw.draw-sprite :shots-1 shot.x shot.y))
   (draw.draw-player controls.player-coords.x
                     controls.player-coords.y
-                    controls.player-deltas.dx)
-  (each [_ shot (ipairs controls.shots.coords)]
-    (draw.draw-sprite :shots-1 shot.x shot.y)))
+                    controls.player-deltas.dx))

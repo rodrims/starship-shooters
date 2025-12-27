@@ -26,7 +26,8 @@
 
 (fn spawn-shot
   [player-x player-y]
-  (table.insert shots.coords {:x player-x :y player-y}))
+  (when (< (length shots.coords) 3)
+    (table.insert shots.coords {:x player-x :y player-y})))
 
 (fn handle-key
   [k press?]
