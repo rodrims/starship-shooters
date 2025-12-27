@@ -9,9 +9,9 @@
         :y 320})
 
 (local shot-deltas
-       {:abs-delta 12
+       {:abs-delta 15
         :dx 0
-        :dy -12})
+        :dy -15})
 
 (local shots
      {:coords []})
@@ -26,7 +26,7 @@
 
 (fn spawn-shot
   [player-x player-y]
-  (when (< (length shots.coords) 3)
+  (when (< (length shots.coords) 5)
     (table.insert shots.coords {:x player-x :y player-y})))
 
 (fn handle-key

@@ -7,7 +7,7 @@
 (var cycle 1)
 
 (local size 16)
-(local cycle-max 8)
+(local cycle-max 32)
 (local load-data
        {:player {:start [32 48]
                  :grid [3 3]
@@ -64,10 +64,17 @@
   []
   (bg-spritebatch:clear)
   ; magic numbers are default resolution + 1
-  (let [bg-name (.. "bg-" (phase 2))]
-    (for [x 0 481 (. load-data bg-name :size)]
-      (for [y 0 641 (. load-data bg-name :size)]
-        (bg-spritebatch:add (. sprites bg-name 1 1) x y))))
+  (let [scroll-phase (phase 32)]
+    ; -128 is so we can scroll from top-left to bottom-right
+    ; we're hardcoding bg-1 since we're assuming all bgs are same size
+    (for [x -128 481 (. load-data :bg-1 :size)]
+      (for [y -128 641 (. load-data :bg-1 :size)]
+        (bg-spritebatch:add (. sprites (.. "bg-" (math.random 1 2)) 1 1)
+                            (+ x (* 2 scroll-phase))
+                            ; the multiplier here has to line up with the size and phase
+                            ; in order to loop correctly
+                            (+ y (* 2 scroll-phase))
+                            ))))
   (love.graphics.draw bg-spritebatch))
 
 (fn draw-sprite
