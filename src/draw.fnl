@@ -15,6 +15,9 @@
         :shots-1 {:start [32 128]
                   :grid [1 1]
                   :default [1 1]}
+        :fish {:start [96 48]
+                     :grid [4 1]
+                     :default [1 1]}
         :bg-1 {:start [272 208]
                :size 64
                :grid [1 1]
@@ -31,8 +34,9 @@
       (set cycle 1)))
 
 (fn phase
-  [cycle-size]
-  (let [mult (/ cycle cycle-max)]
+  [cycle-size cycle-offset]
+  (let [curr-cycle (% (+ cycle (or cycle-offset 0)) cycle-max)
+        mult (/ curr-cycle cycle-max)]
     (+ 1 (math.floor (* cycle-size mult)))))
 
 (fn load-sprites
@@ -73,8 +77,7 @@
                             (+ x (* 2 scroll-phase))
                             ; the multiplier here has to line up with the size and phase
                             ; in order to loop correctly
-                            (+ y (* 2 scroll-phase))
-                            ))))
+                            (+ y (* 2 scroll-phase))))))
   (love.graphics.draw bg-spritebatch))
 
 (fn draw-sprite
@@ -101,13 +104,26 @@
   (draw-sprite :player
                x
                (+ y size)
-               (+ 1 (phase 2))
+               ; speed up the animation
+               ; todo: perhaps move this logic into phase fn
+               (+ 2 (% (phase 8) 2))
                (if (< dx 0) 1
                    (= dx 0) 2
                    (> dx 0) 3)))
 
-{: inc-cycle
+(fn draw-fish
+  [x y cycle-offset]
+  (let [seq [4 1 2 3 2 1]]
+    (draw-sprite :fish
+                   x
+                   y
+                   1
+                   (. seq (phase 6 cycle-offset)))))
+
+{: cycle-max
+ : inc-cycle
  : load-sprites
  : draw-bg
  : draw-sprite
- : draw-player}
+ : draw-player
+ : draw-fish}
