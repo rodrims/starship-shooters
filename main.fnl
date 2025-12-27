@@ -1,3 +1,4 @@
+(local c (require "src/core.fnl"))
 (local draw (require "src/draw.fnl"))
 (local controls (require "src/controls.fnl"))
 
@@ -26,13 +27,18 @@
     (set cum-dt 0)
     (draw.inc-cycle)
     (set controls.player-coords.x
-         (+ controls.player-coords.x controls.deltas.dx))
+         (+ controls.player-coords.x controls.player-deltas.dx))
     (set controls.player-coords.y
-         (+ controls.player-coords.y controls.deltas.dy))))
+         (+ controls.player-coords.y controls.player-deltas.dy))
+    (set controls.shots.coords (c.filter (fn [shot] (> shot.y 0)) controls.shots.coords))
+    (each [_ shot (ipairs controls.shots.coords)]
+      (set shot.y (+ shot.y controls.shot-deltas.dy)))))
 
 (fn love.draw
   []
   (love.graphics.scale scale scale)
   (draw.draw-player controls.player-coords.x
                     controls.player-coords.y
-                    controls.deltas.dx))
+                    controls.player-deltas.dx)
+  (each [_ shot (ipairs controls.shots.coords)]
+    (draw.draw-sprite :shots-1 shot.x shot.y)))

@@ -10,7 +10,10 @@
 (local load-data
        {:player {:start [32 48]
                  :grid [3 3]
-                 :default [2 1]}})
+                 :default [2 1]}
+        :shots-1 {:start [32 128]
+                  :grid [1 1]
+                  :default [1 1]}})
 
 (fn inc-cycle
   []
