@@ -1,5 +1,8 @@
 (local draw (require "src/draw.fnl"))
 
+(local score
+       {:value 0})
+
 (local player-deltas
        {:abs-delta 8
         :dx 0
@@ -7,7 +10,7 @@
 
 ; this is the middle of the screen for the default resolution of 480x640 
 (local player-coords
-       {:x 240
+       {:x 180
         :y 320})
 
 (local shot-deltas
@@ -63,7 +66,6 @@
 
 (fn spawn-explosion
   [x y fps]
-  (print (length explosions.coords))
   (table.insert explosions.coords
                 {:x x
                  :y y
@@ -88,7 +90,8 @@
     :space (when press? (spawn-shot player-coords.x player-coords.y))
     :q (love.event.quit)))
 
-{: player-deltas
+{: score
+ : player-deltas
  : player-coords
  : shot-deltas
  : shots

@@ -8,7 +8,8 @@
 
 (fn range
   [start stop step]
-  (let [result []]
+  (let [step (or step 1)
+        result []]
     (for [i start stop step]
       (table.insert result i))
     result))
@@ -20,13 +21,18 @@
 
 (fn map
   [f tbl]
-  (icollect [_ item (pairs tbl)]
+  (icollect [_ item (ipairs tbl)]
     (f item)))
+
+(fn map-indexed
+  [f tbl]
+  (icollect [index item (ipairs tbl)]
+    (f index item)))
 
 (fn filter
   [f tbl]
   (let [result []]
-    (each [_ item (pairs tbl)]
+    (each [_ item (ipairs tbl)]
       (when (f item)
         (table.insert result item)))
     result))
@@ -49,6 +55,7 @@
  : range
  : keys
  : map
+ : map-indexed
  : filter
  : reduce
  : reduce-kv}

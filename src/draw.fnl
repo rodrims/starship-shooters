@@ -21,6 +21,10 @@
         :explosion {:start [272 128]
                     :grid [5 1]
                     :default [1 1]}
+        :numbers {:start [208 81]
+                  :grid [5 2]
+                  :size 8
+                  :default [1 1]}
         :bg-1 {:start [272 208]
                :size 64
                :grid [1 1]
@@ -95,6 +99,19 @@
                         x
                         y)))
 
+(fn draw-number
+  [x y n]
+  (love.graphics.push)
+  (love.graphics.scale 2 2)
+  (let [str-n (tostring n)]
+    (c.map (fn [i]
+             (let [digit (tonumber (str-n:sub i i))
+                   sprite-row (if (< 0 digit 6) 1 2)
+                   sprite-col (if (< 0 digit 6) digit (= digit 0) 5 (- digit 5))]
+               (draw-sprite :numbers (+ x (* 8 (c.dec i))) y sprite-row sprite-col)))
+           (c.range 1 (length str-n))))
+  (love.graphics.pop))
+
 (fn draw-player
   [x y dx]
   ; draw ship
@@ -139,6 +156,7 @@
  : load-sprites
  : draw-bg
  : draw-sprite
+ : draw-number
  : draw-player
  : draw-fish
  : draw-explosion}

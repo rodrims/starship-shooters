@@ -7,8 +7,8 @@
 (local scale 1.5)
 (local fps 32)
 (local base-dims
-       {:w 480
-        :h 640})
+       {:w 360
+        :h 520})
 
 (fn love.load
   []
@@ -37,6 +37,7 @@
     (each [_ fish (ipairs controls.enemies.fish)]
       (each [_ shot (ipairs controls.shots.coords)]
         (when (controls.collision? shot fish)
+          (set controls.score.value (c.inc controls.score.value))
           (set fish.deleted true)
           (set shot.deleted true))))
     (set controls.shots.coords (c.filter (fn [shot] (not shot.deleted)) controls.shots.coords))
@@ -71,4 +72,5 @@
     (draw.draw-sprite :shots-1 shot.x shot.y))
   (draw.draw-player controls.player-coords.x
                     controls.player-coords.y
-                    controls.player-deltas.dx))
+                    controls.player-deltas.dx)
+  (draw.draw-number 4 4 controls.score.value))
