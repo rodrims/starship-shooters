@@ -59,14 +59,14 @@
     (table.insert enemies.fish
                   {:x (math.random 0 screen-w)
                    :y 0
-                   :cycle-offset (math.random 1 draw.cycle-max)})))
+                   :start-cycle draw.cycle.value})))
 
 (fn spawn-explosion
   [x y]
   (table.insert explosions.coords
                 {:x x
                  :y y
-                 :cycle-offset (math.random 1 draw.cycle-max)}))
+                 :start-cycle draw.cycle.value}))
 
 (fn handle-key
   [k press?]

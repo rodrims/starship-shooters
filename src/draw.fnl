@@ -4,9 +4,9 @@
 (var spritesheet nil)
 (var sprites nil)
 (var bg-spritebatch nil)
-(var cycle 1)
 
 (local size 16)
+(local cycle {:value 1})
 (local cycle-max 32)
 (local load-data
        {:player {:start [32 48]
@@ -29,13 +29,16 @@
 
 (fn inc-cycle
   []
-  (if (< (+ cycle 1) cycle-max)
-      (set cycle (+ cycle 1))
-      (set cycle 1)))
+  (if (< cycle.value cycle-max)
+      (set cycle.value (+ cycle.value 1))
+      (set cycle.value 1)))
 
 (fn phase
-  [cycle-size cycle-offset]
-  (let [curr-cycle (% (+ cycle (or cycle-offset 0)) cycle-max)
+  [cycle-size start-cycle]
+  (let [curr-cycle (% (+ cycle.value
+                         (- cycle-max (or start-cycle 1))
+                         1)
+                      cycle-max)
         mult (/ curr-cycle cycle-max)]
     (+ 1 (math.floor (* cycle-size mult)))))
 
@@ -65,18 +68,17 @@
     (set loaded? true)))
 
 (fn draw-bg
-  []
+  [screen-w screen-h]
   (bg-spritebatch:clear)
-  ; magic numbers are default resolution + 1
-  (let [scroll-phase (phase 32)]
-    ; -128 is so we can scroll from top-left to bottom-right
-    ; we're hardcoding bg-1 since we're assuming all bgs are same size
-    (for [x -128 481 (. load-data :bg-1 :size)]
-      (for [y -128 641 (. load-data :bg-1 :size)]
+  (let [scroll-phase (phase 32)
+        bg-size (. load-data :bg-1 :size)
+        neg-buffer (* bg-size -2)]
+    (for [x neg-buffer (+ screen-w 1) bg-size]
+      (for [y neg-buffer (+ screen-h 1) bg-size]
         (bg-spritebatch:add (. sprites (.. "bg-" (math.random 1 2)) 1 1)
-                            (+ x (* 2 scroll-phase))
                             ; the multiplier here has to line up with the size and phase
                             ; in order to loop correctly
+                            (+ x (* 2 scroll-phase))
                             (+ y (* 2 scroll-phase))))))
   (love.graphics.draw bg-spritebatch))
 
@@ -112,15 +114,16 @@
                    (> dx 0) 3)))
 
 (fn draw-fish
-  [x y cycle-offset]
+  [x y start-cycle]
   (let [seq [4 1 2 3 2 1]]
     (draw-sprite :fish
                    x
                    y
                    1
-                   (. seq (phase 6 cycle-offset)))))
+                   (. seq (phase 6 start-cycle)))))
 
-{: cycle-max
+{: cycle
+ : cycle-max
  : inc-cycle
  : load-sprites
  : draw-bg
