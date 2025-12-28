@@ -1,4 +1,10 @@
-;; todo
+(fn inc
+  [i]
+  (+ i 1))
+
+(fn dec
+  [i]
+  (- i 1))
 
 (fn range
   [start stop step]
@@ -38,7 +44,9 @@
                k v (pairs tbl)]
     (f acc k v)))
 
-{: range
+{: inc
+ : dec
+ : range
  : keys
  : map
  : filter

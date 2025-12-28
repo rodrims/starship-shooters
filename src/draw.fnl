@@ -16,8 +16,11 @@
                   :grid [1 1]
                   :default [1 1]}
         :fish {:start [96 48]
-                     :grid [4 1]
-                     :default [1 1]}
+               :grid [4 1]
+               :default [1 1]}
+        :explosion {:start [272 128]
+                    :grid [5 1]
+                    :default [1 1]}
         :bg-1 {:start [272 208]
                :size 64
                :grid [1 1]
@@ -122,6 +125,14 @@
                    1
                    (. seq (phase 6 start-cycle)))))
 
+(fn draw-explosion
+  [x y start-cycle]
+  (draw-sprite :explosion
+               x
+               y
+               1
+               (phase 5 start-cycle)))
+
 {: cycle
  : cycle-max
  : inc-cycle
@@ -129,4 +140,5 @@
  : draw-bg
  : draw-sprite
  : draw-player
- : draw-fish}
+ : draw-fish
+ : draw-explosion}

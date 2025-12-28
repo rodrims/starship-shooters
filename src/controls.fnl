@@ -62,11 +62,21 @@
                    :start-cycle draw.cycle.value})))
 
 (fn spawn-explosion
-  [x y]
+  [x y fps]
+  (print (length explosions.coords))
   (table.insert explosions.coords
                 {:x x
                  :y y
+                 :ftl fps
                  :start-cycle draw.cycle.value}))
+
+(fn collision?
+  [a b]
+  (and
+    (or (<= b.x a.x (+ b.x 16))
+        (<= b.x (+ a.x 16) (+ b.x 16)))
+    (or (<= b.y a.y (+ b.y 16))
+        (<= b.y (+ a.y 16) (+ b.y 16)))))
 
 (fn handle-key
   [k press?]
@@ -87,4 +97,5 @@
  : update-player
  : spawn-enemy
  : spawn-explosion
+ : collision?
  : handle-key}
