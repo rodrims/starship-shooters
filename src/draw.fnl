@@ -148,7 +148,7 @@
                x
                y
                1
-               (phase 5 start-cycle)))
+               (c.inc (% (phase 12 start-cycle) 5))))
 
 {: cycle
  : cycle-max

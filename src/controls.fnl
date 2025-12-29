@@ -1,3 +1,4 @@
+(local c (require "src/core.fnl"))
 (local draw (require "src/draw.fnl"))
 
 (local score
@@ -69,7 +70,7 @@
   (table.insert explosions.coords
                 {:x x
                  :y y
-                 :ftl fps
+                 :ftl (math.floor (/ fps 3))
                  :start-cycle draw.cycle.value}))
 
 (fn collision?

@@ -4,7 +4,7 @@
 
 (var cum-dt 0)
 
-(local scale 1.5)
+(local scale 2)
 (local fps 32)
 (local base-dims
        {:w 360
@@ -56,7 +56,7 @@
     (each [_ fish (ipairs controls.enemies.fish)]
       (set fish.y (+ fish.y controls.enemies.dy-fish)))
     ; todo: not sure why > 1 instead of > 0
-    (set controls.explosions.coords (c.filter (fn [explosion] (> explosion.ftl 1)) controls.explosions.coords))
+    (set controls.explosions.coords (c.filter (fn [explosion] (> explosion.ftl 0)) controls.explosions.coords))
     (each [_ explosion (ipairs controls.explosions.coords)]
       (set explosion.ftl (c.dec explosion.ftl)))))
 
