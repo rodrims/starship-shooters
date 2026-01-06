@@ -37,26 +37,30 @@
     (each [_ fish (ipairs controls.enemies.fish)]
       (each [_ shot (ipairs controls.shots.coords)]
         (when (controls.collision? shot fish)
-          (set controls.score.value (c.inc controls.score.value))
+          (c.fset controls.score :value c.inc)
           (set fish.deleted true)
-          (set shot.deleted true))))
-    (set controls.shots.coords (c.filter (fn [shot] (not shot.deleted)) controls.shots.coords))
-    (set controls.enemies.fish
-         (c.filter (fn [fish]
-                     (when fish.deleted
-                       (controls.spawn-explosion fish.x fish.y fps))
-                     (not fish.deleted))
-                   controls.enemies.fish))
+          (set shot.deleted true)))
+      (when (and (controls.collision? fish controls.player) (not fish.deleted))
+        (c.fset controls.player :lives c.dec)
+        (set fish.deleted true)))
+    (c.fset controls.shots :coords (partial c.filter #(not $1.deleted)))
+    (c.fset controls.enemies
+            :fish
+            (partial c.filter
+                     (fn [fish]
+                       (when fish.deleted
+                         (controls.spawn-explosion fish.x fish.y fps))
+                       (not fish.deleted))))
     ;; other updates
     (controls.update-player base-dims.w base-dims.h)
-    (set controls.shots.coords (c.filter (fn [shot] (> shot.y 0)) controls.shots.coords))
+    (c.fset controls.shots :coords (partial c.filter #(> $1.y 0)))
     (each [_ shot (ipairs controls.shots.coords)]
-      (set shot.y (+ shot.y controls.shot-deltas.dy)))
-    (set controls.enemies.fish (c.filter (fn [fish] (< fish.y base-dims.h)) controls.enemies.fish))
+      (set shot.y (+ shot.y controls.shots.dy)))
+    (c.fset controls.enemies :fish (partial c.filter #(< $1.y base-dims.h)))
     (each [_ fish (ipairs controls.enemies.fish)]
       (set fish.y (+ fish.y controls.enemies.dy-fish)))
     ; todo: not sure why > 1 instead of > 0
-    (set controls.explosions.coords (c.filter (fn [explosion] (> explosion.ftl 0)) controls.explosions.coords))
+    (c.fset controls.explosions :coords (partial c.filter #(> $1.ftl 0)))
     (each [_ explosion (ipairs controls.explosions.coords)]
       (set explosion.ftl (c.dec explosion.ftl)))))
 
@@ -70,7 +74,11 @@
     (draw.draw-fish fish.x fish.y fish.start-cycle))
   (each [_ shot (ipairs controls.shots.coords)]
     (draw.draw-sprite :shots-1 shot.x shot.y))
-  (draw.draw-player controls.player-coords.x
-                    controls.player-coords.y
-                    controls.player-deltas.dx)
-  (draw.draw-number 4 4 controls.score.value))
+  (draw.draw-player controls.player.x
+                    controls.player.y
+                    controls.player.dx)
+  (draw.draw-number 4 4 controls.score.value)
+  ; need to find a better way to do easy math here with scaling
+
+  (draw.draw-lives (- base-dims.w 24) 12 controls.player.lives)
+  )

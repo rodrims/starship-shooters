@@ -4,23 +4,19 @@
 (local score
        {:value 0})
 
-(local player-deltas
-       {:abs-delta 8
+(local player
+       {:lives 3
+        :x 180
+        :y 320
+        :abs-delta 8
         :dx 0
         :dy 0})
 
-; this is the middle of the screen for the default resolution of 480x640 
-(local player-coords
-       {:x 180
-        :y 320})
-
-(local shot-deltas
-       {:abs-delta 15
+(local shots
+       {:coords []
+        :abs-delta 15
         :dx 0
         :dy -15})
-
-(local shots
-       {:coords []})
 
 (local enemies
        {:dt-since-fish 0
@@ -42,12 +38,12 @@
 
 (fn update-player
   [screen-w screen-h]
-  (let [new-x (+ player-coords.x player-deltas.dx)]
+  (let [new-x (+ player.x player.dx)]
     (when (and (< 0 new-x) (< (+ new-x 16) screen-w))
-      (set player-coords.x new-x)))
-  (let [new-y (+ player-coords.y player-deltas.dy)]
+      (set player.x new-x)))
+  (let [new-y (+ player.y player.dy)]
     (when (and (< 0 new-y) (< (+ new-y 16) screen-h))
-      (set player-coords.y new-y))))
+      (set player.y new-y))))
 
 (fn spawn-shot
   [player-x player-y]
@@ -84,17 +80,15 @@
 (fn handle-key
   [k press?]
   (case k
-    :up (update-delta player-deltas :dy false press?)
-    :down (update-delta player-deltas :dy true press?)
-    :left (update-delta player-deltas :dx false press?)
-    :right (update-delta player-deltas :dx true press?)
-    :space (when press? (spawn-shot player-coords.x player-coords.y))
+    :up (update-delta player :dy false press?)
+    :down (update-delta player :dy true press?)
+    :left (update-delta player :dx false press?)
+    :right (update-delta player :dx true press?)
+    :space (when press? (spawn-shot player.x player.y))
     :q (love.event.quit)))
 
 {: score
- : player-deltas
- : player-coords
- : shot-deltas
+ : player
  : shots
  : enemies
  : explosions

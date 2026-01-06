@@ -50,6 +50,11 @@
                k v (pairs tbl)]
     (f acc k v)))
 
+;; non-clojure fns
+(fn fset
+  [x path f]
+  (set (. x path) (f (. x path))))
+
 {: inc
  : dec
  : range
@@ -58,4 +63,5 @@
  : map-indexed
  : filter
  : reduce
- : reduce-kv}
+ : reduce-kv
+ : fset}
