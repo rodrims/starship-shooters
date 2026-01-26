@@ -31,11 +31,19 @@
 
 (fn filter
   [f tbl]
-  (let [result []]
-    (each [_ item (ipairs tbl)]
-      (when (f item)
-        (table.insert result item)))
-    result))
+  (if tbl
+    (let [result []]
+      (each [_ item (ipairs tbl)]
+        (when (f item)
+          (table.insert result item)))
+      result)
+    ; todo: probably a better way than to repeat logic
+    (fn [itbl]
+      (let [result []]
+        (each [_ item (ipairs itbl)]
+          (when (f item)
+            (table.insert result item)))
+        result))))
 
 (fn reduce
   [f init-val tbl]

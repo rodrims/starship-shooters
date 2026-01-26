@@ -1,10 +1,11 @@
 (local c (require "src/core.fnl"))
 (local draw (require "src/draw.fnl"))
+(local sound (require "src/sound.fnl"))
 (local controls (require "src/controls.fnl"))
 
 (var cum-dt 0)
 
-(local scale 2)
+(local scale 3)
 (local fps 32)
 (local base-dims
        {:w 360
@@ -16,7 +17,8 @@
   (love.window.setTitle "Starship Shooters")
   (love.graphics.setDefaultFilter :nearest)
   (love.graphics.setLineStyle :rough)
-  (draw.load-sprites))
+  (draw.load-sprites)
+  (sound.load-effects))
 
 (fn love.keypressed
   [k]
@@ -28,7 +30,9 @@
 
 (fn love.update
   [dt]
-  (controls.spawn-enemy dt base-dims.w)
+  (when (controls.player-alive?)
+    (controls.spawn-enemy dt base-dims.w))
+  (controls.update-timers dt)
   (set cum-dt (+ cum-dt dt))
   (when (>= cum-dt (/ 1 fps))
     (set cum-dt 0)
@@ -40,27 +44,31 @@
           (c.fset controls.score :value c.inc)
           (set fish.deleted true)
           (set shot.deleted true)))
-      (when (and (controls.collision? fish controls.player) (not fish.deleted))
+      (when (and (controls.player-alive?)
+                 (controls.collision? fish controls.player)
+                 (not fish.deleted))
         (c.fset controls.player :lives c.dec)
+        (controls.timer :player-dead 5 #(do (set controls.player.x controls.player.start-x)
+                                            (set controls.player.y controls.player.start-y)))
         (set fish.deleted true)))
-    (c.fset controls.shots :coords (partial c.filter #(not $1.deleted)))
+    (c.fset controls.shots :coords (c.filter #(not $1.deleted)))
     (c.fset controls.enemies
             :fish
-            (partial c.filter
-                     (fn [fish]
-                       (when fish.deleted
-                         (controls.spawn-explosion fish.x fish.y fps))
-                       (not fish.deleted))))
+            (c.filter
+             (fn [fish]
+               (when fish.deleted
+                 (controls.spawn-explosion fish.x fish.y fps))
+               (not fish.deleted))))
     ;; other updates
-    (controls.update-player base-dims.w base-dims.h)
-    (c.fset controls.shots :coords (partial c.filter #(> $1.y 0)))
+    (when (controls.player-alive?)
+      (controls.update-player base-dims.w base-dims.h))
+    (c.fset controls.shots :coords (c.filter #(> $1.y 0)))
     (each [_ shot (ipairs controls.shots.coords)]
       (set shot.y (+ shot.y controls.shots.dy)))
-    (c.fset controls.enemies :fish (partial c.filter #(< $1.y base-dims.h)))
+    (c.fset controls.enemies :fish (c.filter #(< $1.y base-dims.h)))
     (each [_ fish (ipairs controls.enemies.fish)]
       (set fish.y (+ fish.y controls.enemies.dy-fish)))
-    ; todo: not sure why > 1 instead of > 0
-    (c.fset controls.explosions :coords (partial c.filter #(> $1.ftl 0)))
+    (c.fset controls.explosions :coords (c.filter #(> $1.ftl 0)))
     (each [_ explosion (ipairs controls.explosions.coords)]
       (set explosion.ftl (c.dec explosion.ftl)))))
 
@@ -74,11 +82,12 @@
     (draw.draw-fish fish.x fish.y fish.start-cycle))
   (each [_ shot (ipairs controls.shots.coords)]
     (draw.draw-sprite :shots-1 shot.x shot.y))
-  (draw.draw-player controls.player.x
-                    controls.player.y
-                    controls.player.dx)
+  (when (controls.player-alive?)
+    (draw.draw-player controls.player.x
+                      controls.player.y
+                      controls.player.dx))
   (draw.draw-number 4 4 controls.score.value)
   ; need to find a better way to do easy math here with scaling
-
+  ; this at least involves knowing the original dimensions 
   (draw.draw-lives (- base-dims.w 24) 12 controls.player.lives)
   )

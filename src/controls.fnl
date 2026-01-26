@@ -1,11 +1,13 @@
-(local c (require "src/core.fnl"))
 (local draw (require "src/draw.fnl"))
+(local sound (require "src/sound.fnl"))
 
 (local score
        {:value 0})
 
 (local player
        {:lives 3
+        :start-x 180
+        :start-y 320
         :x 180
         :y 320
         :abs-delta 8
@@ -28,6 +30,14 @@
 (local explosions
        {:coords []})
 
+(local timers
+       {})
+
+(fn player-alive?
+  []
+  (and (> player.lives 0)
+       (not timers.player-dead)))
+
 (fn update-delta
   [base name positive? press?]
   (set (. base name)
@@ -48,7 +58,8 @@
 (fn spawn-shot
   [player-x player-y]
   (when (< (length shots.coords) 5)
-    (table.insert shots.coords {:x player-x :y player-y})))
+    (table.insert shots.coords {:x player-x :y player-y})
+    (sound.play :player-shot)))
 
 (fn spawn-enemy
   [dt screen-w]
@@ -67,7 +78,8 @@
                 {:x x
                  :y y
                  :ftl (math.floor (/ fps 3))
-                 :start-cycle draw.cycle.value}))
+                 :start-cycle draw.cycle.value})
+  (sound.play :explosion))
 
 (fn collision?
   [a b]
@@ -77,13 +89,35 @@
     (or (<= b.y a.y (+ b.y 16))
         (<= b.y (+ a.y 16) (+ b.y 16)))))
 
+(fn timer
+  [name seconds f]
+  (set (. timers name) {:ttl seconds :handler f}))
+
+(fn update-timers
+  [dt]
+  (each [name m (pairs timers)]
+    (let [new-ttl (- m.ttl dt)]
+      (if (< new-ttl 0)
+          (do
+            (m.handler)
+            (set (. timers name) nil))
+          (set m.ttl new-ttl)))))
+
 (fn handle-key
   [k press?]
   (case k
     :up (update-delta player :dy false press?)
+    :w (update-delta player :dy false press?)
+
     :down (update-delta player :dy true press?)
+    :s (update-delta player :dy true press?)
+
     :left (update-delta player :dx false press?)
+    :a (update-delta player :dx false press?)
+
     :right (update-delta player :dx true press?)
+    :d (update-delta player :dx true press?)
+
     :space (when press? (spawn-shot player.x player.y))
     :q (love.event.quit)))
 
@@ -92,8 +126,11 @@
  : shots
  : enemies
  : explosions
+ : player-alive?
  : update-player
  : spawn-enemy
  : spawn-explosion
  : collision?
+ : timer
+ : update-timers
  : handle-key}
