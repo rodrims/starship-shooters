@@ -36,7 +36,11 @@
         :bg-2 {:start [352 208]
                :size 64
                :grid [1 1]
-               :default [1 1]}})
+               :default [1 1]}
+        :game-start {:start [256 81]
+                     :size 8
+                     :grid [6 1]
+                     :default [1 1]}})
 
 (fn inc-cycle
   []
@@ -93,6 +97,7 @@
                             (+ y (* 2 scroll-phase))))))
   (love.graphics.draw bg-spritebatch))
 
+; fixme: naming of row/col is confusing, I think backwards???
 (fn draw-sprite
   [name x y col row]
   (let [default (. load-data name :default)
@@ -102,6 +107,18 @@
                         (. sprites name row col)
                         x
                         y)))
+
+(fn draw-game-start
+  [x y opacity]
+  (love.graphics.push)
+  (love.graphics.translate x y)
+  (love.graphics.scale 2)
+  (love.graphics.setColor 1 1 1 opacity)
+  (c.map (fn [i]
+           (draw-sprite :game-start (* 8 (c.dec i)) 0 1 i))
+         (c.range 1 (. load-data.game-start.grid 1)))
+  (love.graphics.setColor 1 1 1 1)
+  (love.graphics.pop))
 
 (fn draw-number
   [x y n]
@@ -171,6 +188,7 @@
  : load-sprites
  : draw-bg
  : draw-sprite
+ : draw-game-start
  : draw-number
  : draw-lives
  : draw-player

@@ -1,14 +1,19 @@
 (local draw (require :src.draw))
 (local sound (require :src.sound))
 
+(local game-start
+       {:ftl 32
+        :opacity 1
+        :display? true})
+
 (local score
        {:value 0})
 
 (local player
        {:lives 3
-        :start-x 180
+        :start-x 172
         :start-y 320
-        :x 180
+        :x 172
         :y 320
         :abs-delta 8
         :dx 0
@@ -121,7 +126,8 @@
     :space (when press? (spawn-shot player.x player.y))
     :q (love.event.quit)))
 
-{: score
+{: game-start
+ : score
  : player
  : shots
  : enemies

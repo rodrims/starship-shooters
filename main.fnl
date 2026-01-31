@@ -18,7 +18,9 @@
   (love.graphics.setDefaultFilter :nearest)
   (love.graphics.setLineStyle :rough)
   (draw.load-sprites)
-  (sound.load-effects))
+  (sound.load-effects)
+  ; start game sound
+  (sound.play :player-spawn))
 
 (fn love.keypressed
   [k]
@@ -37,6 +39,11 @@
   (when (>= cum-dt (/ 1 fps))
     (set cum-dt 0)
     (draw.inc-cycle)
+    (when controls.game-start.display?
+      (c.fset controls.game-start :ftl c.dec)
+      (set controls.game-start.opacity (/ controls.game-start.ftl 32))
+      (when (< controls.game-start.ftl 1)
+        (set controls.game-start.display? false)))
     ; handle collision (messy)
     (each [_ fish (ipairs controls.enemies.fish)]
       (each [_ shot (ipairs controls.shots.coords)]
@@ -78,6 +85,8 @@
   []
   (love.graphics.scale scale scale)
   (draw.draw-bg base-dims.w base-dims.h)
+  (when controls.game-start.display?
+    (draw.draw-game-start (- (/ base-dims.w 2) 48) 160 controls.game-start.opacity))
   (each [_ explosion (ipairs controls.explosions.coords)]
     (draw.draw-explosion explosion.x explosion.y explosion.start-cycle))
   (each [_ fish (ipairs controls.enemies.fish)]
