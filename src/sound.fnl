@@ -6,7 +6,10 @@
        {:source (love.audio.newSource "assets/sfx_wpn_laser8.wav" :static)})
   (set effects.explosion
        {:source (love.audio.newSource "assets/sfx_exp_short_hard14.wav" :static)
-        :volume 0.35}))
+        :volume 0.35})
+  (set effects.player-spawn
+       {:source (love.audio.newSource "assets/sfx_sounds_fanfare3.wav" :static)
+        :volume 1.0}))
 
 (fn play
   [name]

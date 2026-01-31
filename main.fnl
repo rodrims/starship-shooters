@@ -49,7 +49,9 @@
                  (not fish.deleted))
         (c.fset controls.player :lives c.dec)
         (controls.timer :player-dead 5 #(do (set controls.player.x controls.player.start-x)
-                                            (set controls.player.y controls.player.start-y)))
+                                            (set controls.player.y controls.player.start-y)
+                                            (when (> controls.player.lives 0)
+                                              (sound.play :player-spawn))))
         (set fish.deleted true)))
     (c.fset controls.shots :coords (c.filter #(not $1.deleted)))
     (c.fset controls.enemies
