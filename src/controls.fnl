@@ -62,7 +62,8 @@
 
 (fn spawn-shot
   [player-x player-y]
-  (when (< (length shots.coords) 5)
+  (when (and (< (length shots.coords) 5)
+             (player-alive?))
     (table.insert shots.coords {:x player-x :y player-y})
     (sound.play :player-shot)))
 
