@@ -106,28 +106,22 @@
 (fn draw-number
   [x y n]
   (let [scale 2]
-    (love.graphics.push)
-    (love.graphics.scale scale)
     (let [str-n (tostring n)]
       (c.map (fn [i]
                (let [digit (tonumber (str-n:sub i i))
                      sprite-row (if (< 0 digit 6) 1 2)
                      sprite-col (if (< 0 digit 6) digit (= digit 0) 5 (- digit 5))]
                  (love.graphics.push)
-                 (love.graphics.translate (+ x (* 8 (c.dec i))) y)
+                 (love.graphics.translate (+ x (* 8 scale (c.dec i))) y)
+                 (love.graphics.scale scale)
                  (draw-sprite :numbers 0 0 sprite-row sprite-col)
                  (love.graphics.pop)))
-             (c.range 1 (length str-n))))
-    (love.graphics.pop)))
+             (c.range 1 (length str-n))))))
 
 (fn draw-lives
   [x y n]
-  (let [scale 1]
-    (love.graphics.push)
-    (love.graphics.scale scale)
-    (for [m 0 (c.dec n)]
-      (draw-sprite :lives (- x (* m load-data.lives.size)) y))
-    (love.graphics.pop)))
+  (for [m 0 (c.dec n)]
+    (draw-sprite :lives (- x (* m load-data.lives.size)) y)))
 
 (fn draw-player
   [x y dx]
@@ -161,11 +155,15 @@
 
 (fn draw-explosion
   [x y start-cycle]
+  (love.graphics.push)
+  (love.graphics.translate x y)
+  (love.graphics.scale 2)
   (draw-sprite :explosion
-               x
-               y
+               0
+               0
                1
-               (c.inc (% (phase 12 start-cycle) 5))))
+               (c.inc (% (phase 12 start-cycle) 5)))
+  (love.graphics.pop))
 
 {: cycle
  : cycle-max

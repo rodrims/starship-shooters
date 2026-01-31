@@ -88,7 +88,7 @@
     (draw.draw-player controls.player.x
                       controls.player.y
                       controls.player.dx))
-  (draw.draw-number 4 4 controls.score.value)
+  (draw.draw-number 8 8 controls.score.value)
   ; need to find a better way to do easy math here with scaling
   ; this at least involves knowing the original dimensions 
   (draw.draw-lives (- base-dims.w 24) 12 controls.player.lives)
