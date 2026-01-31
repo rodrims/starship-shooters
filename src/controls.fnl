@@ -1,5 +1,5 @@
-(local draw (require "src/draw.fnl"))
-(local sound (require "src/sound.fnl"))
+(local draw (require :src.draw))
+(local sound (require :src.sound))
 
 (local score
        {:value 0})

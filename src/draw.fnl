@@ -1,4 +1,4 @@
-(local c (require "src/core.fnl"))
+(local c (require :src.core))
 
 (var loaded? false)
 (var spritesheet nil)

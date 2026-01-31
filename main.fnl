@@ -1,7 +1,7 @@
-(local c (require "src/core.fnl"))
-(local draw (require "src/draw.fnl"))
-(local sound (require "src/sound.fnl"))
-(local controls (require "src/controls.fnl"))
+(local c (require :src.core))
+(local draw (require :src.draw))
+(local sound (require :src.sound))
+(local controls (require :src.controls))
 
 (var cum-dt 0)
 
