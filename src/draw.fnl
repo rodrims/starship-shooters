@@ -40,7 +40,11 @@
         :game-start {:start [256 81]
                      :size 8
                      :grid [6 1]
-                     :default [1 1]}})
+                     :default [1 1]}
+        :game-end {:start [256 89]
+                   :size 8
+                   :grid [9 1]
+                   :default [1 1]}})
 
 (fn inc-cycle
   []
@@ -120,6 +124,18 @@
   (love.graphics.setColor 1 1 1 1)
   (love.graphics.pop))
 
+(fn draw-game-end
+  [x y opacity]
+  (love.graphics.push)
+  (love.graphics.translate x y)
+  (love.graphics.scale 2)
+  (love.graphics.setColor 1 1 1 opacity)
+  (c.map (fn [i]
+           (draw-sprite :game-end (* 8 (c.dec i)) 0 1 i))
+         (c.range 1 (. load-data.game-end.grid 1)))
+  (love.graphics.setColor 1 1 1 1)
+  (love.graphics.pop))
+
 (fn draw-number
   [x y n]
   (let [scale 2]
@@ -189,6 +205,7 @@
  : draw-bg
  : draw-sprite
  : draw-game-start
+ : draw-game-end
  : draw-number
  : draw-lives
  : draw-player

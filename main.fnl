@@ -20,7 +20,7 @@
   (draw.load-sprites)
   (sound.load-effects)
   ; start game sound
-  (sound.play :player-spawn))
+  (controls.reset-game))
 
 (fn love.keypressed
   [k]
@@ -44,6 +44,8 @@
       (set controls.game-start.opacity (/ controls.game-start.ftl 32))
       (when (< controls.game-start.ftl 1)
         (set controls.game-start.display? false)))
+    (when controls.game-end.display?
+      (c.fset controls.game-end :opacity #(let [new-val (+ $1 (/ 1 fps))] (if (> new-val 1) 1 new-val))))
     ; handle collision (messy)
     (each [_ fish (ipairs controls.enemies.fish)]
       (each [_ shot (ipairs controls.shots.coords)]
@@ -55,10 +57,17 @@
                  (controls.collision? fish controls.player)
                  (not fish.deleted))
         (c.fset controls.player :lives c.dec)
-        (controls.timer :player-dead 5 #(do (set controls.player.x controls.player.start-x)
-                                            (set controls.player.y controls.player.start-y)
-                                            (when (> controls.player.lives 0)
-                                              (sound.play :player-spawn))))
+        (controls.timer :player-dead
+                        1
+                        #(do (set controls.player.x controls.player.start-x)
+                               (set controls.player.y controls.player.start-y)
+                               (when (> controls.player.lives 0)
+                                 (sound.play :player-spawn
+                                             (- 1 (* 0.1 (- controls.player.start-lives
+                                                            controls.player.lives)))))))
+        (when (= controls.player.lives 0)
+          (set controls.game-end.display? true)
+          (sound.play :player-death))
         (set fish.deleted true)))
     (c.fset controls.shots :coords (c.filter #(not $1.deleted)))
     (c.fset controls.enemies
@@ -84,9 +93,11 @@
 (fn love.draw
   []
   (love.graphics.scale scale scale)
+
+  ; bg
   (draw.draw-bg base-dims.w base-dims.h)
-  (when controls.game-start.display?
-    (draw.draw-game-start (- (/ base-dims.w 2) 48) 160 controls.game-start.opacity))
+
+  ; nodes
   (each [_ explosion (ipairs controls.explosions.coords)]
     (draw.draw-explosion explosion.x explosion.y explosion.start-cycle))
   (each [_ fish (ipairs controls.enemies.fish)]
@@ -97,8 +108,14 @@
     (draw.draw-player controls.player.x
                       controls.player.y
                       controls.player.dx))
+
+  ; hud
   (draw.draw-number 8 8 controls.score.value)
   ; need to find a better way to do easy math here with scaling
   ; this at least involves knowing the original dimensions 
   (draw.draw-lives (- base-dims.w 24) 12 controls.player.lives)
+  (when controls.game-start.display?
+    (draw.draw-game-start (- (/ base-dims.w 2) 48) 160 controls.game-start.opacity))
+  (when controls.game-end.display?
+    (draw.draw-game-end (- (/ base-dims.w 2) 72) 160 controls.game-end.opacity))
   )

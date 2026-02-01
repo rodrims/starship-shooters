@@ -6,18 +6,24 @@
         :opacity 1
         :display? true})
 
+(local game-end
+       {:display? false
+        :opacity 0})
+
 (local score
        {:value 0})
 
 (local player
-       {:lives 3
-        :start-x 172
-        :start-y 320
-        :x 172
-        :y 320
-        :abs-delta 8
-        :dx 0
-        :dy 0})
+       (let [start-lives 1]
+         {:start-lives start-lives
+          :lives start-lives
+          :start-x 172
+          :start-y 320
+          :x 172
+          :y 320
+          :abs-delta 8
+          :dx 0
+          :dy 0}))
 
 (local shots
        {:coords []
@@ -26,7 +32,7 @@
         :dy -15})
 
 (local enemies
-       {:dt-since-fish 0
+       {:dt-since-fish -1
         :dt-bw-fish 1
         :dy-fish 6
         :max-fish 5
@@ -35,8 +41,8 @@
 (local explosions
        {:coords []})
 
-(local timers
-       {})
+(var timers
+     {})
 
 (fn player-alive?
   []
@@ -109,6 +115,26 @@
             (set (. timers name) nil))
           (set m.ttl new-ttl)))))
 
+; todo: should probably move this and the init values in the locals to a cfg file
+(fn reset-game
+  []
+  ; game state
+  (set player.lives player.start-lives)
+  (set score.value 0)
+  (set shots.coords [])
+  (set enemies.fish [])
+  (set enemies.dt-since-fish -1)
+  (set explosions.coords [])
+  (set timers {})
+  ; text
+  (set game-start.ftl 32)
+  (set game-start.opacity 1)
+  (set game-start.display? true)
+  (set game-end.opacity 0)
+  (set game-end.display? false)
+  ; sound
+  (sound.play :player-spawn 1))
+
 (fn handle-key
   [k press?]
   (case k
@@ -125,9 +151,11 @@
     :d (update-delta player :dx true press?)
 
     :space (when press? (spawn-shot player.x player.y))
+    :r (when (and press? (= player.lives 0)) (reset-game))
     :q (love.event.quit)))
 
 {: game-start
+ : game-end
  : score
  : player
  : shots
@@ -140,4 +168,5 @@
  : collision?
  : timer
  : update-timers
+ : reset-game
  : handle-key}
