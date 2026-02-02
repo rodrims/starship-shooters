@@ -1,91 +1,77 @@
 (local c (require :src.core))
 (local draw (require :src.draw))
 (local sound (require :src.sound))
-(local controls (require :src.controls))
+(local ctrl (require :src.controls))
+(local {: state : cfg} (require :src.state))
 
-(var cum-dt 0)
-
-(local scale 3)
-(local fps 32)
-(local screen
-       {:w 360
-        :h 520})
+(var dt-since-frame 0)
 
 (fn love.load
   []
-  (love.window.setMode (* scale screen.w) (* scale screen.h))
-  (love.window.setTitle "Starship Shooters")
+  (love.window.setMode (* cfg.scale cfg.screen.w) (* cfg.scale cfg.screen.h))
+  (love.window.setTitle cfg.window-title)
   (love.graphics.setDefaultFilter :nearest)
   (love.graphics.setLineStyle :rough)
   (draw.load-sprites)
   (sound.load-effects)
-  ; set initial game state
-  (controls.reset-game))
+  ;; set initial game state
+  (ctrl.reset-game))
 
 (fn love.keypressed
   [k]
-  (controls.handle-key k true))
+  (ctrl.handle-key k true))
 
 (fn love.keyreleased
   [k]
-  (controls.handle-key k false))
+  (ctrl.handle-key k false))
 
 (fn love.gamepadaxis
   [_ axis val]
   (if (= axis :leftx)
-      (set controls.player.dx (* val controls.player.abs-delta))
+      (set state.player.dx (* val state.player.abs-delta))
       (= axis :lefty)
-      (set controls.player.dy (* val controls.player.abs-delta))))
+      (set state.player.dy (* val state.player.abs-delta))))
 
 (fn love.gamepadpressed
   [_ button]
   (when (= button :x)
-    (controls.handle-key :space true)))
+    (ctrl.handle-key :space true)))
 
 (fn love.update
   [dt]
-  (controls.spawn-enemies dt screen.w)
-  (controls.update-timers dt)
-  (set cum-dt (+ cum-dt dt))
-  (when (>= cum-dt (/ 1 fps))
-    (set cum-dt 0)
+  (ctrl.spawn-enemies dt cfg.screen.w)
+  (ctrl.update-timers dt)
+  (set dt-since-frame (+ dt-since-frame dt))
+  (when (>= dt-since-frame (/ 1 cfg.fps))
+    (set dt-since-frame 0)
     (draw.inc-cycle)
-    (controls.update-hud fps)
-    (controls.handle-collisions fps)
-    ;; other updates
-    (controls.update-player screen.w screen.h)
-    (controls.update-shots-and-explosions)
-    (controls.update-enemies screen.h)))
+    (ctrl.update-hud cfg.fps)
+    (ctrl.handle-collisions cfg.fps)
+    (ctrl.update-player cfg.screen.w cfg.screen.h)
+    (ctrl.update-shots-and-explosions)
+    (ctrl.update-enemies cfg.screen.h)))
 
 (fn love.draw
   []
-  (love.graphics.scale scale scale)
+  (love.graphics.scale cfg.scale)
+  ;; bg
+  (draw.draw-bg cfg.screen.w cfg.screen.h)
 
-  ; bg
-  (draw.draw-bg screen.w screen.h)
+  ;; nodes
+  (c.map #(draw.draw-explosion $1.x $1.y $1.start-cycle) state.explosions.insts)
+  (c.map #(draw.draw-sprite :shots-1 $1.x $1.y) state.shots.insts)
+  (c.run! (fn [k v]
+            (c.map #(draw.draw-enemy k $1.x $1.y $1.start-cycle) v.insts))
+          state.enemies)
+  (when (ctrl.player-alive?)
+    (draw.draw-player state.player.x state.player.y state.player.dx))
 
-  ; nodes
-  (each [_ explosion (ipairs controls.explosions.coords)]
-    (draw.draw-explosion explosion.x explosion.y explosion.start-cycle))
-  (c.reduce-kv
-    (fn [_ k v]
-      (c.map #(draw.draw-enemy k $1.x $1.y $1.start-cycle) v.insts))
-    nil
-    controls.enemies)
-  (each [_ shot (ipairs controls.shots.coords)]
-    (draw.draw-sprite :shots-1 shot.x shot.y))
-  (when (controls.player-alive?)
-    (draw.draw-player controls.player.x
-                      controls.player.y
-                      controls.player.dx))
-
-  ; hud
-  (draw.draw-number 8 8 controls.score.value)
-  ; need to find a better way to do easy math here with scaling
-  ; this at least involves knowing the original dimensions 
-  (draw.draw-lives (- screen.w 24) 12 controls.player.lives)
-  (when controls.game-start.display?
-    (draw.draw-game-start (- (/ screen.w 2) 48) 160 controls.game-start.opacity))
-  (when controls.game-end.display?
-    (draw.draw-game-end (- (/ screen.w 2) 72) 160 controls.game-end.opacity))
-  )
+  ;; hud
+  (draw.draw-number cfg.hud.offset cfg.hud.offset state.score)
+  ;; need to find a better way to do easy math here with scaling
+  ;; this at least involves knowing the original dimensions 
+  (draw.draw-lives (- cfg.screen.w 24) cfg.hud.offset state.player.lives)
+  (when state.game-start.display?
+    (draw.draw-game-start (- (/ cfg.screen.w 2) 48) 160 state.game-start.opacity))
+  (when state.game-end.display?
+    (draw.draw-game-end (- (/ cfg.screen.w 2) 72) 160 state.game-end.opacity)))

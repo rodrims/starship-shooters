@@ -1,93 +1,42 @@
 (local c (require :src.core))
 (local draw (require :src.draw))
 (local sound (require :src.sound))
-
-(local game-start
-       {:ftl 32
-        :opacity 1
-        :display? true})
-
-(local game-end
-       {:display? false
-        :opacity 0})
-
-(local score
-       {:value 0})
-
-(local player
-       (let [start-lives 1]
-         {:start-lives start-lives
-          :lives start-lives
-          :start-x 172
-          :start-y 320
-          :x 172
-          :y 320
-          :abs-delta 8
-          :dx 0
-          :dy 0}))
-
-(local shots
-       {:coords []
-        :abs-delta 15
-        :dx 0
-        :dy -15})
-
-(local init-enemies
-       {:fish {:dt-since -1
-               :dt-bw 1
-               :dy 6
-               :max-cnt 5
-               :insts []}
-        :clam {:dt-since -10
-               :dt-bw 2
-               :dy 4
-               :max-cnt 3
-               :insts []}})
-
-(local enemies {})
-
-(local explosions
-       {:coords []})
-
-(var timers
-     {})
+(local {: state : reset-state} (require :src.state))
 
 (fn player-alive?
   []
-  (and (> player.lives 0)
-       (not timers.player-dead)))
+  (and (> state.player.lives 0)
+       (not state.timers.player-dead)))
 
 (fn update-player
   [screen-w screen-h]
   (when (player-alive?)
-    (let [new-x (+ player.x player.dx)]
+    (let [new-x (+ state.player.x state.player.dx)]
       (when (and (< 0 new-x) (< (+ new-x 16) screen-w))
-        (set player.x new-x)))
-    (let [new-y (+ player.y player.dy)]
+        (set state.player.x new-x)))
+    (let [new-y (+ state.player.y state.player.dy)]
       (when (and (< 0 new-y) (< (+ new-y 16) screen-h))
-        (set player.y new-y)))))
+        (set state.player.y new-y)))))
 
-; todo: should refactor? it's overlapping logic with game-reset
 (fn handle-player-respawn
   []
-  (set player.x player.start-x)
-  (set player.y player.start-y)
-  (when (> player.lives 0)
-    (sound.play :player-spawn
-                (- 1 (* 0.1 (- player.start-lives
-                               player.lives))))))
+  (set state.player.x state.player.start-x)
+  (set state.player.y state.player.start-y)
+  (sound.play :player-spawn
+              (- 1 (* 0.1 (- state.player.start-lives
+                             state.player.lives)))))
 
 (fn spawn-shot
   [player-x player-y]
   (when (and (player-alive?)
-             (< (length shots.coords) 5))
-    (table.insert shots.coords {:x player-x :y player-y})
+             (< (length state.shots.insts) 5))
+    (table.insert state.shots.insts {:x player-x :y player-y})
     (sound.play :player-shot)))
 
 
 (fn spawn-explosion
   [x y fps]
-  (table.insert explosions.coords
+  (table.insert state.explosions.insts
                 {:x x
                  :y y
                  :ftl (math.floor (/ fps 3))
@@ -96,14 +45,14 @@
 
 (fn update-shots-and-explosions
   []
-  (->> shots.coords
-       (c.filter #(and (> $1.y 0) (not $1.deleted)))
-       (c.map #(do (set $1.y (+ $1.y shots.dy)) $1))
-       (set shots.coords))
-  (->> explosions.coords
+  (->> state.shots.insts
+       (c.filter #(and (> $1.y 0) (not $1.deleted?)))
+       (c.map #(do (set $1.y (+ $1.y state.shots.dy)) $1))
+       (set state.shots.insts))
+  (->> state.explosions.insts
        (c.filter #(> $1.ftl 0))
        (c.map #(do (c.fset $1 :ftl c.dec) $1))
-       (set explosions.coords)))
+       (set state.explosions.insts)))
 
 (fn spawn-enemies
   [dt screen-w]
@@ -118,41 +67,42 @@
                         {:x (math.random 0 screen-w)
                          :y 0
                          :start-cycle draw.cycle.value})))
-      enemies)))
+      state.enemies)))
 
 (fn update-enemies
   [h]
   (c.run!
     (fn [_ v]
       (->> v.insts
-           (c.filter #(and (< $1.y h) (not $1.deleted)))
+           (c.filter #(and (< $1.y h) (not $1.deleted?)))
            (c.map #(do (set $1.y (+ $1.y v.dy)) $1))
            (set v.insts)))
-    enemies))
+    state.enemies))
 
 (fn update-hud
   [fps]
-  (when game-start.display?
-    (c.fset game-start :ftl c.dec)
-    (set game-start.opacity (/ game-start.ftl 32))
-    (when (< game-start.ftl 1)
-      (set game-start.display? false)))
-  (when game-end.display?
-    (c.fset game-end :opacity #(let [new-val (+ $1 (/ 1 fps))] (if (> new-val 1) 1 new-val)))))
+  (when state.game-start.display?
+    (c.fset state.game-start :ftl c.dec)
+    (set state.game-start.opacity (/ state.game-start.ftl 32))
+    (when (< state.game-start.ftl 1)
+      (set state.game-start.display? false)))
+  (when state.game-end.display?
+    (c.fset state.game-end :opacity #(let [new-val (+ $1 (/ 1 fps))] (if (> new-val 1) 1 new-val)))))
 
 (fn timer
   [name seconds f]
-  (set (. timers name) {:ttl seconds :handler f}))
+  (set (. state.timers name) {:ttl seconds :handler f}))
 
 (fn update-timers
   [dt]
-  (each [name m (pairs timers)]
-    (let [new-ttl (- m.ttl dt)]
-      (if (< new-ttl 0)
-          (do
-            (m.handler)
-            (set (. timers name) nil))
-          (set m.ttl new-ttl)))))
+  (c.run!
+    (fn [k v]
+      ;; had this in reverse order before, but I think it's fine
+      (c.fset v :ttl #(- $1 dt))
+      (when (< v.ttl 0)
+        (v.handler)
+        (set (. state.timers k) nil)))
+    state.timers))
 
 (fn collision?
   [a b]
@@ -165,25 +115,25 @@
 (fn handle-shot-collision
   [shot enemy fps]
   (when (collision? shot enemy)
-    (c.fset score :value c.inc)
-    (set enemy.deleted true)
-    (set shot.deleted true)
+    (c.fset state :score c.inc)
+    (set enemy.deleted? true)
+    (set shot.deleted? true)
     (spawn-explosion enemy.x enemy.y fps)))
 
 (fn handle-player-collision
   [enemy fps]
   (when (and (player-alive?)
-             (collision? enemy player)
-             (not enemy.deleted))
-    (c.fset player :lives c.dec)
-    (set enemy.deleted true)
-    ; todo: two explosions?
-    (spawn-explosion player.x player.y fps)
+             (collision? enemy state.player)
+             (not enemy.deleted?))
+    (c.fset state.player :lives c.dec)
+    (set enemy.deleted? true)
+    ;; todo: two explosions?
+    (spawn-explosion state.player.x state.player.y fps)
     (spawn-explosion enemy.x enemy.y fps)
-    (timer :player-dead 1 handle-player-respawn)
-    (when (= player.lives 0)
-      (set game-end.display? true)
-      (sound.play :player-death))))
+    (if (> state.player.lives 0)
+        (timer :player-dead 1 handle-player-respawn)
+        (do (set state.game-end.display? true)
+            (sound.play :player-death)))))
 
 (fn handle-collisions
   [fps]
@@ -191,32 +141,17 @@
     (fn [_ v]
       (c.map
         (fn [enemy]
-          ; order matters!
-          ; shots should kill enemies before enemies kill player
-          (c.map #(handle-shot-collision $1 enemy fps) shots.coords)
+          ;; order matters!
+          ;; shots should kill enemies before enemies kill player
+          (c.map #(handle-shot-collision $1 enemy fps) state.shots.insts)
           (handle-player-collision enemy fps))
         v.insts))
-    enemies))
+    state.enemies))
 
-; todo: should probably move this and the init values in the locals to a cfg file
 (fn reset-game
   []
-  ; game state
-  (set player.lives player.start-lives)
-  (set score.value 0)
-  (set shots.coords [])
-  ; have to do this instead of just (set enemies ...) because the old reference sticks around
-  (c.map #(set (. enemies $1) (c.deep-copy (. init-enemies $1))) (c.keys init-enemies))
-  (set explosions.coords [])
-  (set timers {})
-  ; text
-  (set game-start.ftl 32)
-  (set game-start.opacity 1)
-  (set game-start.display? true)
-  (set game-end.opacity 0)
-  (set game-end.display? false)
-  ; sound
-  (sound.play :player-spawn 1))
+  (reset-state)
+  (handle-player-respawn))
 
 (fn update-delta
   [base name positive? press?]
@@ -229,30 +164,23 @@
 (fn handle-key
   [k press?]
   (case k
-    :up (update-delta player :dy false press?)
-    :w (update-delta player :dy false press?)
+    :up (update-delta state.player :dy false press?)
+    :w (update-delta state.player :dy false press?)
 
-    :down (update-delta player :dy true press?)
-    :s (update-delta player :dy true press?)
+    :down (update-delta state.player :dy true press?)
+    :s (update-delta state.player :dy true press?)
 
-    :left (update-delta player :dx false press?)
-    :a (update-delta player :dx false press?)
+    :left (update-delta state.player :dx false press?)
+    :a (update-delta state.player :dx false press?)
 
-    :right (update-delta player :dx true press?)
-    :d (update-delta player :dx true press?)
+    :right (update-delta state.player :dx true press?)
+    :d (update-delta state.player :dx true press?)
 
-    :space (when press? (spawn-shot player.x player.y))
-    :r (when (and press? (= player.lives 0)) (reset-game))
+    :space (when press? (spawn-shot state.player.x state.player.y))
+    :r (when (and press? (= state.player.lives 0)) (reset-game))
     :q (love.event.quit)))
 
-{: game-start
- : game-end
- : score
- : player
- : shots
- : enemies
- : explosions
- : player-alive?
+{: player-alive?
  : update-player
  : spawn-enemies
  : update-enemies

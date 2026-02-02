@@ -83,7 +83,7 @@
   [x path f]
   (set (. x path) (f (. x path))))
 
-(fn is-list?
+(fn list?
   [x]
   (and (> (length x) 0)
        (. x 1)))
@@ -91,7 +91,7 @@
 (fn try-str
   [x]
   (if (= (type x) "table")
-      (if (is-list? x)
+      (if (list? x)
           (table.concat (map try-str x) ", ")
           (.. (reduce-kv (fn [acc k v]
                            (.. acc k ": " (try-str v) ", "))
@@ -103,7 +103,7 @@
 (fn deep-copy
   [x]
   (if (= (type x) "table")
-      (if (is-list? x)
+      (if (list? x)
           (map deep-copy x)
           (reduce-kv (fn [acc k v]
                        (set (. acc k) (deep-copy v))
@@ -124,6 +124,6 @@
  : run!
  : concat
  : fset
- : is-list?
+ : list?
  : deep-copy
  : try-str}

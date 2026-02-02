@@ -99,13 +99,13 @@
     (for [x neg-buffer (+ screen-w 1) bg-size]
       (for [y neg-buffer (+ screen-h 1) bg-size]
         (bg-spritebatch:add (. sprites (.. "bg-" (math.random 1 2)) 1 1)
-                            ; the multiplier here has to line up with the size and phase
-                            ; in order to loop correctly
+                            ;; the multiplier here has to line up with the size and phase
+                            ;; in order to loop correctly
                             (+ x (* 2 scroll-phase))
                             (+ y (* 2 scroll-phase))))))
   (love.graphics.draw bg-spritebatch))
 
-; fixme: naming of row/col is confusing, I think backwards???
+;; fixme: naming of row/col is confusing, I think backwards???
 (fn draw-sprite
   [name x y col row]
   (let [default (. sprite-data name :default)
@@ -162,7 +162,7 @@
 
 (fn draw-player
   [x y dx]
-  ; draw ship
+  ;; draw ship
   (draw-sprite :player
                x
                y
@@ -170,12 +170,12 @@
                (if (< dx 0) 1
                    (= dx 0) 2
                    (> dx 0) 3))
-  ; draw flame behind ship
+  ;; draw flame behind ship
   (draw-sprite :player
                x
                (+ y size)
-               ; speed up the animation
-               ; todo: perhaps move this logic into phase fn
+               ;; speed up the animation
+               ;; todo: perhaps move this logic into phase fn
                (+ 2 (% (phase 8) 2))
                (if (< dx 0) 1
                    (= dx 0) 2
@@ -184,7 +184,7 @@
 (fn draw-enemy
   [name x y start-cycle]
   (let [size (. sprite-data name :grid 1)
-        ; for N=4 just generates a sequence like [4 1 2 3 2 1]
+        ;; for N=4 just generates a sequence like [4 1 2 3 2 1]
         seq (-> [size]
                 (c.concat (c.range 1 (- size 1)))
                 (c.concat (c.range (- size 2) 1 -1)))]
