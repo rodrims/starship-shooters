@@ -16,7 +16,7 @@
 
 (fn keys
   [tbl]
-  (icollect [[k _] tbl]
+  (icollect [k _ (pairs tbl)]
     k))
 
 (fn map
@@ -58,10 +58,59 @@
                k v (pairs tbl)]
     (f acc k v)))
 
+; not quite like the clojure fn
+; run! normally takes any seq, but this is specific to kv tables
+(fn run!
+  [f tbl]
+  (reduce-kv
+    (fn [_ k v]
+      (f k v)
+      nil)
+    nil
+    tbl))
+
+(fn concat
+  [a b]
+  (let [len-a (length a)
+        len-b (length b)]
+    (map #(if (<= $1 len-a)
+              (. a $1)
+              (. b (- $1 len-a)))
+         (range 1 (+ len-a len-b)))))
+
 ;; non-clojure fns
 (fn fset
   [x path f]
   (set (. x path) (f (. x path))))
+
+(fn is-list?
+  [x]
+  (and (> (length x) 0)
+       (. x 1)))
+
+(fn try-str
+  [x]
+  (if (= (type x) "table")
+      (if (is-list? x)
+          (table.concat (map try-str x) ", ")
+          (.. (reduce-kv (fn [acc k v]
+                           (.. acc k ": " (try-str v) ", "))
+                         "{"
+                         x)
+              "}"))
+      (tostring x)))
+
+(fn deep-copy
+  [x]
+  (if (= (type x) "table")
+      (if (is-list? x)
+          (map deep-copy x)
+          (reduce-kv (fn [acc k v]
+                       (set (. acc k) (deep-copy v))
+                       acc)
+                     {}
+                     x))
+      x))
 
 {: inc
  : dec
@@ -72,4 +121,9 @@
  : filter
  : reduce
  : reduce-kv
- : fset}
+ : run!
+ : concat
+ : fset
+ : is-list?
+ : deep-copy
+ : try-str}

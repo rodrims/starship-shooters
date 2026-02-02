@@ -8,7 +8,7 @@
 (local size 16)
 (local cycle {:value 1})
 (local cycle-max 32)
-(local load-data
+(local sprite-data
        {:player {:start [32 48]
                  :grid [3 3]
                  :default [2 1]}
@@ -16,7 +16,11 @@
                   :grid [1 1]
                   :default [1 1]}
         :fish {:start [96 48]
+               :start-frame 4
                :grid [4 1]
+               :default [1 1]}
+        :clam {:start [96 64]
+               :grid [5 1]
                :default [1 1]}
         :explosion {:start [272 128]
                     :grid [5 1]
@@ -82,7 +86,7 @@
                (set (. acc k) grid))
              acc)
            {}
-           load-data))
+           sprite-data))
     (set bg-spritebatch (love.graphics.newSpriteBatch spritesheet))
     (set loaded? true)))
 
@@ -90,7 +94,7 @@
   [screen-w screen-h]
   (bg-spritebatch:clear)
   (let [scroll-phase (phase 32)
-        bg-size (. load-data :bg-1 :size)
+        bg-size (. sprite-data :bg-1 :size)
         neg-buffer (* bg-size -2)]
     (for [x neg-buffer (+ screen-w 1) bg-size]
       (for [y neg-buffer (+ screen-h 1) bg-size]
@@ -104,7 +108,7 @@
 ; fixme: naming of row/col is confusing, I think backwards???
 (fn draw-sprite
   [name x y col row]
-  (let [default (. load-data name :default)
+  (let [default (. sprite-data name :default)
         row (or row (. default 1))
         col (or col (. default 2))]
     (love.graphics.draw spritesheet
@@ -120,7 +124,7 @@
   (love.graphics.setColor 1 1 1 opacity)
   (c.map (fn [i]
            (draw-sprite :game-start (* 8 (c.dec i)) 0 1 i))
-         (c.range 1 (. load-data.game-start.grid 1)))
+         (c.range 1 (. sprite-data.game-start.grid 1)))
   (love.graphics.setColor 1 1 1 1)
   (love.graphics.pop))
 
@@ -132,7 +136,7 @@
   (love.graphics.setColor 1 1 1 opacity)
   (c.map (fn [i]
            (draw-sprite :game-end (* 8 (c.dec i)) 0 1 i))
-         (c.range 1 (. load-data.game-end.grid 1)))
+         (c.range 1 (. sprite-data.game-end.grid 1)))
   (love.graphics.setColor 1 1 1 1)
   (love.graphics.pop))
 
@@ -154,7 +158,7 @@
 (fn draw-lives
   [x y n]
   (for [m 0 (c.dec n)]
-    (draw-sprite :lives (- x (* m load-data.lives.size)) y)))
+    (draw-sprite :lives (- x (* m sprite-data.lives.size)) y)))
 
 (fn draw-player
   [x y dx]
@@ -177,14 +181,18 @@
                    (= dx 0) 2
                    (> dx 0) 3)))
 
-(fn draw-fish
-  [x y start-cycle]
-  (let [seq [4 1 2 3 2 1]]
-    (draw-sprite :fish
-                   x
-                   y
-                   1
-                   (. seq (phase 6 start-cycle)))))
+(fn draw-enemy
+  [name x y start-cycle]
+  (let [size (. sprite-data name :grid 1)
+        ; for N=4 just generates a sequence like [4 1 2 3 2 1]
+        seq (-> [size]
+                (c.concat (c.range 1 (- size 1)))
+                (c.concat (c.range (- size 2) 1 -1)))]
+    (draw-sprite name
+                 x
+                 y
+                 1
+                 (. seq (phase (* 2 (- size 1)) start-cycle)))))
 
 (fn draw-explosion
   [x y start-cycle]
@@ -209,5 +217,5 @@
  : draw-number
  : draw-lives
  : draw-player
- : draw-fish
+ : draw-enemy
  : draw-explosion}
