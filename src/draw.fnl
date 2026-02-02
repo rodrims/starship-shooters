@@ -22,6 +22,9 @@
         :clam {:start [96 64]
                :grid [5 1]
                :default [1 1]}
+        :alien {:start [96 80]
+                :grid [6 1]
+                :default [4 1]}
         :explosion {:start [272 128]
                     :grid [5 1]
                     :default [1 1]}
@@ -187,7 +190,8 @@
         ;; for N=4 just generates a sequence like [4 1 2 3 2 1]
         seq (-> [size]
                 (c.concat (c.range 1 (- size 1)))
-                (c.concat (c.range (- size 2) 1 -1)))]
+                (c.concat (c.range (- size 2) 1 -1)))
+        seq (if (= name :alien) [4 5 6 1 2 3 2 1 6 5] seq)]
     (draw-sprite name
                  x
                  y
