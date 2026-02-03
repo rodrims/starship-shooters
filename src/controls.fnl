@@ -66,6 +66,8 @@
           (table.insert v.insts
                         {:x (math.random 0 screen-w)
                          :y 0
+                         :hp v.hp
+                         :blink-ftl 0
                          :start-cycle draw.cycle.value})))
       state.enemies)))
 
@@ -75,7 +77,9 @@
     (fn [_ v]
       (->> v.insts
            (c.filter #(and (< $1.y h) (not $1.deleted?)))
-           (c.map #(do (set $1.y (+ $1.y v.dy)) $1))
+           (c.map #(do (set $1.y (+ $1.y v.dy))
+                       (when (> $1.blink-ftl 0) (c.fset $1 :blink-ftl c.dec))
+                       $1))
            (set v.insts)))
     state.enemies))
 
@@ -115,10 +119,15 @@
 (fn handle-shot-collision
   [shot enemy fps]
   (when (collision? shot enemy)
-    (c.fset state :score c.inc)
-    (set enemy.deleted? true)
     (set shot.deleted? true)
-    (spawn-explosion enemy.x enemy.y fps)))
+    (c.fset enemy :hp c.dec)
+    ;; have to inc by N+1 due to ordering of handle-collisions and update-enemies in main.fnl
+    (c.fset enemy :blink-ftl #(+ $1 3))
+    (if (= enemy.hp 0)
+      (do (set enemy.deleted? true)
+          (c.fset state :score c.inc)
+          (spawn-explosion enemy.x enemy.y fps))
+      (sound.play :enemy-hit))))
 
 (fn handle-player-collision
   [enemy fps]

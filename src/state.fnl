@@ -18,17 +18,24 @@
                       :abs-delta 8
                       :dx 0
                       :dy 0}
-             :shots {:insts [] :abs-delta 15 :dx 0 :dy -15}
-             :enemies {:fish {:dt-since -1 :dt-bw 1 :dy 6 :max-cnt 5 :insts []}
+             :shots {:insts [] :dx 0 :dy -15}
+             :enemies {:fish {:dt-since -1
+                              :dt-bw 1
+                              :dy 6
+                              :max-cnt 5
+                              :hp 1
+                              :insts []}
                        :clam {:dt-since -5
                               :dt-bw 2
                               :dy 4
                               :max-cnt 3
+                              :hp 2
                               :insts []}
                        :alien {:dt-since -10
                                :dt-bw 3
                                :dy 2
                                :max-cnt 1
+                               :hp 5
                                :insts []}}
              :explosions {:insts []}
              :timers {}})

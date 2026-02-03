@@ -60,9 +60,7 @@
   ;; nodes
   (c.map #(draw.draw-explosion $1.x $1.y $1.start-cycle) state.explosions.insts)
   (c.map #(draw.draw-sprite :shots-1 $1.x $1.y) state.shots.insts)
-  (c.run! (fn [k v]
-            (c.map #(draw.draw-enemy k $1.x $1.y $1.start-cycle) v.insts))
-          state.enemies)
+  (c.run! (fn [k v] (c.map #(draw.draw-enemy k $1) v.insts)) state.enemies)
   (when (ctrl.player-alive?)
     (draw.draw-player state.player.x state.player.y state.player.dx))
 

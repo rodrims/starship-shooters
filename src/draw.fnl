@@ -56,7 +56,7 @@
 (fn inc-cycle
   []
   (if (< cycle.value cycle-max)
-      (set cycle.value (+ cycle.value 1))
+      (c.fset cycle :value c.inc)
       (set cycle.value 1)))
 
 (fn phase
@@ -185,18 +185,22 @@
                    (> dx 0) 3)))
 
 (fn draw-enemy
-  [name x y start-cycle]
+  [name {: x : y : start-cycle : blink-ftl}]
   (let [size (. sprite-data name :grid 1)
         ;; for N=4 just generates a sequence like [4 1 2 3 2 1]
         seq (-> [size]
                 (c.concat (c.range 1 (- size 1)))
                 (c.concat (c.range (- size 2) 1 -1)))
         seq (if (= name :alien) [4 5 6 1 2 3 2 1 6 5] seq)]
+    (when (> blink-ftl 0)
+      (love.graphics.setColor 1 0 0))
     (draw-sprite name
                  x
                  y
                  1
-                 (. seq (phase (* 2 (- size 1)) start-cycle)))))
+                 (. seq (phase (* 2 (- size 1)) start-cycle)))
+    ;; todo: cleaner to do this?
+    (love.graphics.setColor 1 1 1)))
 
 (fn draw-explosion
   [x y start-cycle]
